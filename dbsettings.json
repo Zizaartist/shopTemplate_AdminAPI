@@ -1,8 +1,5 @@
 {
   "ConnectionStrings": {
-    //"DefaultConnection": "Data Source=tcp:clickapisqldb.database.windows.net,1433;Initial Catalog=ClickDB-3;Persist Security Info=False;User ID=azureuser;Password=!CJGBBVF!3662!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-    "DefaultConnection": "Data Source=tcp:shopserverdebug.database.windows.net,1433;Initial Catalog=ShopDatabaseTemplate;Persist Security Info=False;User ID=azureuser;Password=!CJGBBVF!3662!;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
-    "LocalConnection": "Data Source=localhost;Initial Catalog='template_project_database';Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;"
-    //"LocalConnection": "Data Source=localhost;Initial Catalog=NewClickDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;"
+    "DefaultConnection": "Server=tcp:shoptemplateserver.database.windows.net,1433;Initial Catalog=ShopTemplateDemo;Persist Security Info=False;User ID=Syberia;Password=K1e2s3k4i5l6;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   }
 }
