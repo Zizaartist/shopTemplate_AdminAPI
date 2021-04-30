@@ -171,6 +171,8 @@ namespace ShopAdminAPI
 
                 entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
 
+                entity.Property(e => e.InStorage).IsRequired();
+
                 entity.Property(e => e.ProductName)
                     .IsRequired()
                     .HasMaxLength(30);

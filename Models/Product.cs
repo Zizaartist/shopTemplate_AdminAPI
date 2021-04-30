@@ -22,6 +22,8 @@ namespace ShopAdminAPI.Models
         public int? Discount { get; set; }
         public string Image { get; set; }
         public string Description { get; set; }
+        public int InStorage { get; set; }
+
         [JsonIgnore]
         public DateTime CreatedDate { get; set; }
 

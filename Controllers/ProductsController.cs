@@ -23,6 +23,20 @@ namespace ShopAdminAPI.Controllers
             this._logger = _logger;
         }
 
+        // PUT api/<ProductsController>/
+        [Route("Add/{_productId}/{_amount}")]
+        [HttpPut]
+        public ActionResult IncreaseProductCount(int _productId, int _amount) 
+        {
+            var product = _context.Product.Find(_productId);
+
+            product.InStorage += _amount;
+
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
         // POST api/<ProductsController>
         [HttpPost]
         public ActionResult Post(Product _newProduct)
