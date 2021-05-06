@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using ApiClick.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -31,5 +32,7 @@ namespace ShopAdminAPI.Models
         public virtual Category Category { get; set; }
         [JsonIgnore]
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Report> Reports { get; set; }
     }
 }

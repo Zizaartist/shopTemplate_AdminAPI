@@ -1,7 +1,9 @@
 ﻿using System;
+using ApiClick.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using ShopAdminAPI.Models;
+using ShopAdminAPI.Models.Statistics;
 
 // Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
 // If you have enabled NRTs for your project, then un-comment the following line:
@@ -20,6 +22,7 @@ namespace ShopAdminAPI
         {
         }
 
+        public virtual DbSet<AdBanner> AdBanner { get; set; }
         public virtual DbSet<Category> Category { get; set; }
         public virtual DbSet<ErrorReport> ErrorReport { get; set; }
         public virtual DbSet<Order> Order { get; set; }
@@ -28,9 +31,17 @@ namespace ShopAdminAPI
         public virtual DbSet<PointRegister> PointRegister { get; set; }
         public virtual DbSet<Product> Product { get; set; }
         public virtual DbSet<User> User { get; set; }
+        public virtual DbSet<SessionRecord> SessionRecord { get; set; }
+        public virtual DbSet<Report> Report { get; set; }
+        public virtual DbSet<TokenRecord> TokenRecord { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AdBanner>(entity => 
+            {
+                entity.HasKey(e => e.AdBannerId);
+            });
+
             modelBuilder.Entity<Category>(entity =>
             {
                 entity.HasIndex(e => e.Image)
@@ -207,6 +218,26 @@ namespace ShopAdminAPI
                     .HasMaxLength(30);
 
                 entity.Property(e => e.Points).HasColumnType("decimal(18, 2)");
+            });
+
+            modelBuilder.Entity<SessionRecord>(entity => 
+            {
+                
+            });
+
+            modelBuilder.Entity<Report>(entity => 
+            {
+                entity.HasKey(e => e.ReportId);
+
+                entity.HasOne(e => e.ProductOfDay)
+                        .WithMany(e => e.Reports)
+                        .HasForeignKey(e => e.ProductOfDayId)
+                        .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<TokenRecord>(entity =>
+            {
+
             });
 
             OnModelCreatingPartial(modelBuilder);

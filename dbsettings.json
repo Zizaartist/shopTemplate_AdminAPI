@@ -1,5 +1,6 @@
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=tcp:shoptemplateserver.database.windows.net,1433;Initial Catalog=ShopTemplateDemo;Persist Security Info=False;User ID=Syberia;Password=K1e2s3k4i5l6;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    "DefaultConnection": "Server=tcp:shoptemplateserver.database.windows.net,1433;Initial Catalog=ShopTemplateDemo;Persist Security Info=False;User ID=Syberia;Password=K1e2s3k4i5l6;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "LocalConnection": "Server=localhost;Initial Catalog=shop_database_template;Persist Security Info=False;Integrated Security=True;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   }
 }

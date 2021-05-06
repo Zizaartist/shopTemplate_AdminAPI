@@ -29,7 +29,7 @@ namespace ShopAdminAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ShopContext>(options => options.UseSqlServer(_confString.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ShopContext>(options => options.UseSqlServer(_confString.GetConnectionString("LocalConnection")));
             services.AddControllersWithViews()
                 .AddNewtonsoftJson(options =>
                 {
