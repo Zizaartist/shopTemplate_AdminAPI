@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ShopAdminAPI.Models
 {
@@ -14,13 +12,16 @@ namespace ShopAdminAPI.Models
         public string ActualAddress { get; set; }
         public string Email { get; set; }
         public string Phones { get; set; } //тупо хуярь все в одну строку с разделителями $
-        public string INN { get; set; }
-        public string OGRNIP { get; set; }
+        public string Inn { get; set; }
+        public string Ogrnip { get; set; }
         public string LegalAddress { get; set; }
+        public string DeliveryTerms { get; set; }
+        public decimal DeliveryPrice { get; set; }
+        public int MaxPoints { get; set; }
         public string PaymentMethods { get; set; } //012 - каждый char это int значение enum модели
 
         [NotMapped]
-        public string[] ActualPhones 
+        public string[] ActualPhones
         {
             get => Phones.Split('$');
             set
@@ -32,16 +33,16 @@ namespace ShopAdminAPI.Models
             }
         }
         [NotMapped]
-        public List<PaymentMethod> ActualPaymentMethods 
+        public List<PaymentMethod> ActualPaymentMethods
         {
-            get 
+            get
             {
                 var pmList = new List<PaymentMethod>();
                 foreach (var character in PaymentMethods)
                     pmList.Add((PaymentMethod)int.Parse(character.ToString()));
                 return pmList;
             }
-            set 
+            set
             {
                 string pms = null;
                 foreach (var pm in value)

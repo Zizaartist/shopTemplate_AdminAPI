@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace ApiClick.Models
+// Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
+// If you have enabled NRTs for your project, then un-comment the following line:
+// #nullable disable
+
+namespace ShopAdminAPI.Models
 {
-    //Запись о входе в приложение
-    public class SessionRecord
+    public partial class SessionRecord
     {
         public DateTime CreatedDate { get; set; }
     }

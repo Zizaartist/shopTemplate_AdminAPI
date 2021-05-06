@@ -4,6 +4,7 @@ using ApiClick.StaticValues;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopAdminAPI.Controllers.FrequentlyUsed;
+using ShopAdminAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

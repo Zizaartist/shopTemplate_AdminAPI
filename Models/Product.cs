@@ -1,5 +1,4 @@
-﻿using ApiClick.Models;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -14,6 +13,7 @@ namespace ShopAdminAPI.Models
         public Product()
         {
             OrderDetails = new HashSet<OrderDetail>();
+            Reports = new HashSet<Report>();
         }
 
         public int ProductId { get; set; }
