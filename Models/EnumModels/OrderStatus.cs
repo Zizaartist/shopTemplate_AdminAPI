@@ -13,5 +13,6 @@ namespace ShopAdminAPI.Models.EnumModels
         received, //Принят брендом (автоматически или через агрегатор)
         onWay, //Исполнитель утверждает что уже доставляет товар
         delivered, //Доставка произведена
+        canceled //Заказ отменен
     }
 }

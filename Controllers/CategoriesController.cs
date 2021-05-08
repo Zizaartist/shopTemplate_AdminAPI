@@ -45,10 +45,10 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}")]
-        public ActionResult Put(Category _categoryData, int id) 
+        [HttpPut]
+        public ActionResult Put(Category _categoryData) 
         {
-            var category = _context.Category.Find();
+            var category = _context.Category.Find(_categoryData.CategoryId);
 
             category.CategoryName = _categoryData.CategoryName;
             category.Image = _categoryData.Image;

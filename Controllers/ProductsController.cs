@@ -23,7 +23,7 @@ namespace ShopAdminAPI.Controllers
             this._logger = _logger;
         }
 
-        // PUT api/<ProductsController>/
+        // PUT api/Products/Add/3/4
         [Route("Add/{_productId}/{_amount}")]
         [HttpPut]
         public ActionResult IncreaseProductCount(int _productId, int _amount) 
@@ -37,7 +37,7 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
-        // POST api/<ProductsController>
+        // POST api/Products
         [HttpPost]
         public ActionResult Post(Product _newProduct)
         {
@@ -47,11 +47,11 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
-        // PUT api/<ProductsController>/5
-        [HttpPut("{id}")]
-        public ActionResult Put(int id, Product _productData)
+        // PUT api/Products
+        [HttpPut]
+        public ActionResult Put(Product _productData)
         {
-            var product = _context.Product.Find(id);
+            var product = _context.Product.Find(_productData.ProductId);
 
             product.ProductName = _productData.ProductName;
             product.Description = _productData.Description;
@@ -64,7 +64,7 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
-        // DELETE api/<ProductsController>/5
+        // DELETE api/Products/5
         [HttpDelete("{id}")]
         public ActionResult Delete(int id)
         {

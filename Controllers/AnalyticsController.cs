@@ -14,11 +14,11 @@ namespace ShopAdminAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class StatisticsController : Controller
+    public class AnalyticsController : Controller
     {
         private readonly ShopContext _context;
 
-        public StatisticsController(ShopContext _context)
+        public AnalyticsController(ShopContext _context)
         {
             this._context = _context;
         }
@@ -27,7 +27,7 @@ namespace ShopAdminAPI.Controllers
         /// Возвращает отчеты за определенный период
         /// </summary>
         /// <param name="datePeriod">Временной период (неделя, месяц, год, все время)</param>
-        // GET: api/Statistics/30/3
+        // GET: api/Analytics/30/3
         [HttpGet("{datePeriod}/{_page}")]
         public ActionResult<IEnumerable<Report>> Get(DatePeriod datePeriod, int _page)
         {
@@ -52,8 +52,8 @@ namespace ShopAdminAPI.Controllers
         /// <summary>
         /// Возвращает статистические показатели за определенный период
         /// </summary>
-        // GET: api/Statistics/AllTimeStats
-        [Route("AllTimeStats")]
+        // GET: api/Analytics/Stats/7
+        [Route("Stats/{datePeriod}")]
         [HttpGet]
         public ActionResult<string> GetPeriodStats(DatePeriod datePeriod)
         {
@@ -85,7 +85,7 @@ namespace ShopAdminAPI.Controllers
         /// Метод вызывается при входе в административное приложение
         /// Если последний отчет был сгенерирован 
         /// </summary>
-        // POST: api/Statistics/GenerateReports
+        // POST: api/Analytics/GenerateReports
         [Route("GenerateReports")]
         [HttpPost]
         public ActionResult GenerateReports() 
