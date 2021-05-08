@@ -61,8 +61,12 @@ namespace ShopAdminAPI.Controllers
             var startingDay = DateTime.UtcNow.Date.AddDays((int)datePeriod * -1);
 
             var registeredUsersCount = _context.User.Where(user => user.CreatedDate >= startingDay).Count();
-            var installationsCount = _context.TokenRecord.Where(rec => rec.CreatedDate >= startingDay).Count();
-            var appLaunchCount = _context.SessionRecord.Where(rec => rec.CreatedDate >= startingDay).Count();
+
+
+            var installationsCount = _context.TokenRecord.FromSqlRaw($"SELECT * FROM dbo.TokenRecord WHERE CreatedDate >= {startingDay}").Count();
+            var appLaunchCount = _context.SessionRecord.FromSqlRaw($"SELECT * FROM dbo.SessionRecord WHERE CreatedDate >= {startingDay}").Count();
+
+
             var ordersCount = _context.Order.Where(order => order.CreatedDate >= startingDay).Count();
             var sumRevenue = _context.Order.Include(order => order.OrderDetails)
                                             .DefaultIfEmpty() //Возвращает default если коллекция пуста
