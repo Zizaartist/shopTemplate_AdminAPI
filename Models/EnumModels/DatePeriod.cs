@@ -9,6 +9,7 @@ namespace ApiClick.Models.EnumModels
     {
         week = 7,
         month = 30,
+        halfYear = 183,
         year = 365,
         allTime = 0
     }

@@ -160,8 +160,11 @@ namespace ShopAdminAPI.Controllers.FrequentlyUsed
             return true;
         }
 
-        public static decimal CalculateSum(Order _order)
+        public decimal CalculateSum(Order _order)
         {
+            //Если детали не загружены - подгрузить
+            if (!_order.OrderDetails.Any()) _context.Entry(_order).Collection(order => order.OrderDetails).Load();
+            //Если деталей нет даже после загрузки - что-то не так
             if (!_order.OrderDetails.Any() || _order.OrderDetails.Any(e => e.Price == default || e.Count == default)) throw new Exception("Ошибка при вычислении кэшбэка");
             return _order.OrderDetails.Sum(e => e.Price * e.Count);
         }

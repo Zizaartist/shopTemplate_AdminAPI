@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ApiClick.StaticValues;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShopAdminAPI.Controllers.FrequentlyUsed;
@@ -70,6 +71,39 @@ namespace ShopAdminAPI.Controllers
                                                         order.OrderStatus != OrderStatus.sent); //Первый статус
 
             if (!orders.Any()) 
+            {
+                return NotFound();
+            }
+
+            var result = orders.ToList();
+
+            foreach (var order in result)
+            {
+                order.Sum = order.OrderDetails.Sum(detail => detail.Count * detail.Price) +
+                            (order.DeliveryPrice ?? 0) -
+                            (order.PointRegister?.Points ?? 0);
+                order.OrderDetails = null;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Возвращает историю заказов постранично
+        /// </summary>
+        // GET: api/Orders/History/3
+        [Route("History/{_page}")]
+        [HttpGet]
+        public ActionResult<IEnumerable<Order>> GetHistory(int _page)
+        {
+            var orders = _context.Order.Include(order => order.OrderDetails)
+                                        .Include(order => order.PointRegisters)
+                                        .Include(order => order.OrderInfo)
+                                        .Where(order => order.OrderStatus >= OrderStatus.delivered);
+
+            orders = Functions.GetPageRange(orders, _page, PageLengths.ORDER_LENGTH);
+
+            if (!orders.Any())
             {
                 return NotFound();
             }

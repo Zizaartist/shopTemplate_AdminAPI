@@ -58,19 +58,20 @@ namespace ShopAdminAPI.Controllers
         public ActionResult<string> GetPeriodStats(DatePeriod datePeriod)
         {
             //Вычитаем период для получения дня отчета. Получаем результаты от startingDay по текущий
-            var startingDay = DateTime.UtcNow.Date.AddDays((int)datePeriod * -1);
+            var startingDay = DateTime.UtcNow.AddDays((int)datePeriod * -1).Date;
 
             var registeredUsersCount = _context.User.Where(user => user.CreatedDate >= startingDay).Count();
 
-
-            var installationsCount = _context.TokenRecord.FromSqlRaw($"SELECT * FROM dbo.TokenRecord WHERE CreatedDate >= {startingDay}").Count();
-            var appLaunchCount = _context.SessionRecord.FromSqlRaw($"SELECT * FROM dbo.SessionRecord WHERE CreatedDate >= {startingDay}").Count();
-
+            var installationsCount = _context.TokenRecord.FromSqlRaw($"SELECT * FROM dbo.TokenRecord WHERE CreatedDate >= \'{startingDay}\'").Count();
+            var appLaunchCount = _context.SessionRecord.FromSqlRaw($"SELECT * FROM dbo.SessionRecord WHERE CreatedDate >= \'{startingDay}\'").Count();
 
             var ordersCount = _context.Order.Where(order => order.CreatedDate >= startingDay).Count();
+
+            var pointsController = new PointsController(_context);
             var sumRevenue = _context.Order.Include(order => order.OrderDetails)
                                             .DefaultIfEmpty() //Возвращает default если коллекция пуста
-                                            .Sum(order => order != default ? PointsController.CalculateSum(order) : 0);
+                                            .ToList()
+                                            .Sum(order => order != default ? pointsController.CalculateSum(order) : 0m);
 
             var result = new 
             {
@@ -94,12 +95,12 @@ namespace ShopAdminAPI.Controllers
         [HttpPost]
         public ActionResult GenerateReports() 
         {
-            var lastReport = _context.Report.OrderBy(report => report.CreatedDate).First();
+            var lastReport = _context.Report.OrderBy(report => report.CreatedDate).DefaultIfEmpty().First();
 
             var yesterday = DateTime.UtcNow.Date.AddDays(-1); //Последний отчет всегда должен быть вчерашним
 
             //Генерация первого отчета
-            if (lastReport == null)
+            if (lastReport == default)
             {
                 AddingReports(yesterday);
                 _context.SaveChanges();
@@ -130,7 +131,8 @@ namespace ShopAdminAPI.Controllers
         {
             var ordersFromDay = _context.Order.Where(order => order.CreatedDate.Date == _day).ToList();
 
-            var totatSum = ordersFromDay?.Sum(order => PointsController.CalculateSum(order)) ?? 0;
+            var pointsController = new PointsController(_context);
+            var totatSum = ordersFromDay?.Sum(order => pointsController.CalculateSum(order)) ?? 0;
 
             Report result = new Report()
             {
