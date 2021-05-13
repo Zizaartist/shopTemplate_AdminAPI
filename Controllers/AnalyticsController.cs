@@ -1,6 +1,7 @@
 ﻿using ApiClick.Models;
 using ApiClick.Models.EnumModels;
 using ApiClick.StaticValues;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopAdminAPI.Controllers.FrequentlyUsed;
@@ -13,6 +14,7 @@ using System.Threading.Tasks;
 namespace ShopAdminAPI.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class AnalyticsController : Controller
     {
@@ -34,8 +36,9 @@ namespace ShopAdminAPI.Controllers
             //Вычитаем период для получения дня отчета. Получаем результаты от startingDay по текущий
             var startingDay = DateTime.UtcNow.Date.AddDays((int)datePeriod * -1);
 
-            var reports = _context.Report.Include(rep => rep.ProductOfDay)
-                                            .Where(rep => ((rep.CreatedDate >= startingDay) || datePeriod == DatePeriod.allTime));
+            IQueryable<Report> reports = _context.Report.Include(rep => rep.ProductOfDay)
+                                            .Where(rep => ((rep.CreatedDate >= startingDay) || datePeriod == DatePeriod.allTime))
+                                            .OrderByDescending(rep => rep.CreatedDate);
 
             reports = Functions.GetPageRange(reports, _page, PageLengths.REPORT_LENGTH);
 
@@ -60,18 +63,21 @@ namespace ShopAdminAPI.Controllers
             //Вычитаем период для получения дня отчета. Получаем результаты от startingDay по текущий
             var startingDay = DateTime.UtcNow.AddDays((int)datePeriod * -1).Date;
 
-            var registeredUsersCount = _context.User.Where(user => user.CreatedDate >= startingDay).Count();
+            var registeredUsersCount = _context.User.Where(user => user.CreatedDate >= startingDay || datePeriod == DatePeriod.allTime).Count();
 
-            var installationsCount = _context.TokenRecord.FromSqlRaw($"SELECT * FROM dbo.TokenRecord WHERE CreatedDate >= \'{startingDay}\'").Count();
-            var appLaunchCount = _context.SessionRecord.FromSqlRaw($"SELECT * FROM dbo.SessionRecord WHERE CreatedDate >= \'{startingDay}\'").Count();
+            //Если выбран allTime, вставляем 1
+            var installationsCount = _context.TokenRecord.FromSqlRaw($"SELECT * FROM dbo.TokenRecord WHERE {(datePeriod == DatePeriod.allTime ? "1" : "CreatedDate >= \'" + startingDay + "\'")}").Count();
+            var appLaunchCount = _context.SessionRecord.FromSqlRaw($"SELECT * FROM dbo.SessionRecord WHERE {(datePeriod == DatePeriod.allTime ? "1" : "CreatedDate >= \'" + startingDay + "\'")}").Count();
 
-            var ordersCount = _context.Order.Where(order => order.CreatedDate >= startingDay).Count();
+            var ordersCount = _context.Order.Where(order => order.CreatedDate >= startingDay || datePeriod == DatePeriod.allTime).Count();
 
             var pointsController = new PointsController(_context);
+
             var sumRevenue = _context.Order.Include(order => order.OrderDetails)
+                                            .Where(order => order.CreatedDate >= startingDay || datePeriod == DatePeriod.allTime)
                                             .DefaultIfEmpty() //Возвращает default если коллекция пуста
                                             .ToList()
-                                            .Sum(order => order != default ? pointsController.CalculateSum(order) : 0m);
+                                            .Sum(order => order != default ? pointsController.CalculateSum(order) + (order.DeliveryPrice ?? 0m) : 0m);
 
             var result = new 
             {
@@ -95,7 +101,7 @@ namespace ShopAdminAPI.Controllers
         [HttpPost]
         public ActionResult GenerateReports() 
         {
-            var lastReport = _context.Report.OrderBy(report => report.CreatedDate).DefaultIfEmpty().First();
+            var lastReport = _context.Report.OrderByDescending(report => report.CreatedDate).DefaultIfEmpty().First();
 
             var yesterday = DateTime.UtcNow.Date.AddDays(-1); //Последний отчет всегда должен быть вчерашним
 
@@ -117,6 +123,7 @@ namespace ShopAdminAPI.Controllers
                 for (; daysSinceLastReport > 0; daysSinceLastReport--) 
                 {
                     var newReportDate = lastReportDate.AddDays(1);
+                    lastReportDate = newReportDate;
 
                     AddingReports(newReportDate);
                 }
@@ -127,12 +134,22 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
+        [HttpDelete]
+        public ActionResult Removeall() 
+        {
+            IQueryable<Report> allReports = _context.Report;
+            _context.Report.RemoveRange(allReports);
+            AddingReports(new DateTime(2021, 4, 1));
+            _context.SaveChanges();
+            return Ok();
+        }
+
         private void AddingReports(DateTime _day)
         {
             var ordersFromDay = _context.Order.Where(order => order.CreatedDate.Date == _day).ToList();
 
             var pointsController = new PointsController(_context);
-            var totatSum = ordersFromDay?.Sum(order => pointsController.CalculateSum(order)) ?? 0;
+            var totatSum = ordersFromDay?.Sum(order => pointsController.CalculateSum(order) + (order.DeliveryPrice ?? 0m)) ?? 0m;
 
             Report result = new Report()
             {

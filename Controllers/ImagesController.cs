@@ -17,6 +17,7 @@ using static ApiClick.StaticValues.ImageSpecs;
 namespace ApiClick.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ImagesController : ControllerBase
     {

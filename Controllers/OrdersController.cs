@@ -1,5 +1,7 @@
 ﻿using ApiClick.StaticValues;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShopAdminAPI.Controllers.FrequentlyUsed;
@@ -13,6 +15,7 @@ using System.Threading.Tasks;
 namespace ShopAdminAPI.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class OrdersController : ControllerBase
     {
@@ -33,10 +36,11 @@ namespace ShopAdminAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Order>> GetNewOrders()
         {
-            var orders = _context.Order.Include(order => order.OrderDetails)
+            IQueryable<Order> orders = _context.Order.Include(order => order.OrderDetails)
                                         .Include(order => order.PointRegisters)
                                         .Include(order => order.OrderInfo)
-                                        .Where(order => order.OrderStatus == OrderStatus.sent);
+                                        .Where(order => order.OrderStatus == OrderStatus.sent)
+                                        .OrderByDescending(order => order.CreatedDate);
 
             if (!orders.Any())
             {
@@ -64,11 +68,12 @@ namespace ShopAdminAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Order>> GetUnfinishedOrders() 
         {
-            var orders = _context.Order.Include(order => order.OrderDetails)
+            IQueryable<Order> orders = _context.Order.Include(order => order.OrderDetails)
                                         .Include(order => order.PointRegisters)
                                         .Include(order => order.OrderInfo)
                                         .Where(order => order.OrderStatus != OrderStatus.delivered && //Последний статус
-                                                        order.OrderStatus != OrderStatus.sent); //Первый статус
+                                                        order.OrderStatus != OrderStatus.sent) //Первый статус
+                                        .OrderByDescending(order => order.CreatedDate);
 
             if (!orders.Any()) 
             {
@@ -96,10 +101,11 @@ namespace ShopAdminAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Order>> GetHistory(int _page)
         {
-            var orders = _context.Order.Include(order => order.OrderDetails)
+            IQueryable<Order> orders = _context.Order.Include(order => order.OrderDetails)
                                         .Include(order => order.PointRegisters)
                                         .Include(order => order.OrderInfo)
-                                        .Where(order => order.OrderStatus >= OrderStatus.delivered);
+                                        .Where(order => order.OrderStatus >= OrderStatus.delivered)
+                                        .OrderByDescending(order => order.CreatedDate);
 
             orders = Functions.GetPageRange(orders, _page, PageLengths.ORDER_LENGTH);
 
@@ -141,10 +147,6 @@ namespace ShopAdminAPI.Controllers
             {
                 return BadRequest("Заказ уже выполнен/отменен, смена статуса невозможна");
             }
-            else if (order.OrderStatus == OrderStatus.sent)
-            {
-                return BadRequest("Заказ еще не принят, смена статуса невозможна");
-            }
 
             order.OrderStatus = _status;
 
@@ -170,12 +172,15 @@ namespace ShopAdminAPI.Controllers
                     return BadRequest("Не удалось произвести кэшбэк");
                 }
             }
-            //Производим отмену транзакции
+            //Производим отмену транзакции если таковая существует
             else if (order.OrderStatus == OrderStatus.canceled) 
             {
-                if (!pointsController.CancelTransaction(order.PointRegister))
+                if (order.PointRegister != null)
                 {
-                    return BadRequest("Не удалось произвести возврат средств");
+                    if (!pointsController.CancelTransaction(order.PointRegister))
+                    {
+                        return BadRequest("Не удалось произвести возврат средств");
+                    }
                 }
             }
 
@@ -185,7 +190,7 @@ namespace ShopAdminAPI.Controllers
         }
 
         // DELETE: api/Orders/RefuseOrder/2
-        [Route("RefureOrder/{id}")]
+        [Route("RefuseOrder/{id}")]
         [HttpDelete]
         public ActionResult RefuseOrder(int id) 
         {
@@ -208,6 +213,15 @@ namespace ShopAdminAPI.Controllers
                 }
             }
 
+            //"Отсоединяем" связанные сущности, чтобы контексту было наплевать на отсутсвие каскада
+            var detachedOrderDetails = _context.ChangeTracker.Entries<OrderDetail>().ToList();
+
+            foreach (var detail in detachedOrderDetails) 
+            {
+                detail.State = EntityState.Detached;
+            }
+
+            //Удаляем без сомнений и позволяем триггеру делать свою работу
             _context.Order.Remove(order);
             _context.SaveChanges();
 
