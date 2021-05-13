@@ -24,24 +24,41 @@ namespace ShopAdminAPI.Controllers
             this._logger = _logger;
         }
 
-        //Получаем все древо категорий сразу
+        /// <summary>
+        /// Возвращает подкатегории указанной родительской категории
+        /// </summary>
+        /// <param name="parentId">Опциональный id родительской категории</param>
+        // GET: api/Categories/3
+        [Route("{parentId:int?}")]
         [HttpGet]
-        public ActionResult<IEnumerable<Category>> Get() 
+        public ActionResult<IEnumerable<Category>> Get(int? parentId = null) 
         {
-            var categories = _context.Category.Where(cat => cat.ParentCategoryId == null);
+            var categories = _context.Category.Include(cat => cat.ChildCategories)
+                                                .Include(cat => cat.Products)
+                                                .Where(cat => cat.ParentCategoryId == parentId);
 
-            foreach (var category in categories) 
+            if (!categories.Any()) 
             {
-                RecursiveLazyLoad(category);
+                return NotFound();
             }
 
-            return categories.ToList();
+            var result = categories.ToList();
+
+            return result;
         }
 
         [HttpPost]
         public ActionResult Post(Category _newCategory) 
         {
-            _context.Category.Add(_newCategory);
+            if (_newCategory == null || 
+                string.IsNullOrEmpty(_newCategory.CategoryName)) 
+            {
+                return BadRequest();
+            }
+
+            _context.Category.Add(new Category { CategoryName = _newCategory.CategoryName, 
+                                                    Image = _newCategory.Image, 
+                                                    ParentCategoryId = _newCategory.ParentCategoryId });
             _context.SaveChanges();
 
             return Ok();
@@ -50,10 +67,21 @@ namespace ShopAdminAPI.Controllers
         [HttpPut]
         public ActionResult Put(Category _categoryData) 
         {
+            if (_categoryData == null ||
+                string.IsNullOrEmpty(_categoryData.CategoryName)) 
+            {
+                return BadRequest();
+            }
+
             var category = _context.Category.Find(_categoryData.CategoryId);
 
+            if (category == null) 
+            {
+                return NotFound();
+            }
+
             category.CategoryName = _categoryData.CategoryName;
-            category.Image = _categoryData.Image;
+            if (!string.IsNullOrEmpty(_categoryData.Image)) category.Image = _categoryData.Image;
 
             _context.SaveChanges();
 
@@ -74,20 +102,20 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
-        private void RecursiveLazyLoad(Category parentEntity) 
-        {
-            _context.Entry(parentEntity).Collection(cat => cat.ChildCategories).Load();
+        //private void RecursiveLazyLoad(Category parentEntity) 
+        //{
+        //    _context.Entry(parentEntity).Collection(cat => cat.ChildCategories).Load();
 
-            if (!parentEntity.IsEndpoint) 
-            {
-                foreach (var childCategory in parentEntity.ChildCategories) 
-                {
-                    RecursiveLazyLoad(childCategory);
-                }
+        //    if (!parentEntity.IsEndpoint) 
+        //    {
+        //        foreach (var childCategory in parentEntity.ChildCategories) 
+        //        {
+        //            RecursiveLazyLoad(childCategory);
+        //        }
 
-                _context.Entry(parentEntity).Collection(cat => cat.Products).Load();
-            }
-        }
+        //        _context.Entry(parentEntity).Collection(cat => cat.Products).Load();
+        //    }
+        //}
 
         private void RecursiveRemove(Category parentEntity)
         {
