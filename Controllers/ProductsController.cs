@@ -37,11 +37,45 @@ namespace ShopAdminAPI.Controllers
             return Ok();
         }
 
+        [Route("{categoryId}")]
+        [HttpGet]
+        public ActionResult<IEnumerable<Product>> Get(int categoryId) 
+        {
+            var products = _context.Product.Where(product => product.CategoryId == categoryId);
+
+            if (!products.Any()) 
+            {
+                return NotFound();
+            }
+
+            var result = products.ToList();
+
+            return result;
+        }
+
         // POST api/Products
         [HttpPost]
         public ActionResult Post(Product _newProduct)
         {
-            _context.Product.Add(_newProduct);
+            if (_newProduct == null ||
+                string.IsNullOrEmpty(_newProduct.ProductName) ||
+                (_newProduct.Discount != null ? _newProduct.Discount <= 0 : false) ||
+                _newProduct.Price <= 0) 
+            {
+                return BadRequest();
+            }
+
+            _context.Product.Add(new Product
+                                {
+                                    CategoryId = _newProduct.CategoryId,
+                                    ProductName = _newProduct.ProductName,
+                                    Description = _newProduct.Description,
+                                    CreatedDate = DateTime.UtcNow,
+                                    Discount = _newProduct.Discount,
+                                    Price = _newProduct.Price,
+                                    Image = _newProduct.Image,
+                                    InStorage = _newProduct.InStorage
+                                });
             _context.SaveChanges();
 
             return Ok();
@@ -51,11 +85,24 @@ namespace ShopAdminAPI.Controllers
         [HttpPut]
         public ActionResult Put(Product _productData)
         {
+            if (_productData == null ||
+                string.IsNullOrEmpty(_productData.ProductName) ||
+                (_productData.Discount != null ? _productData.Discount <= 0 : false) ||
+                _productData.Price <= 0)
+            {
+                return BadRequest();
+            }
+
             var product = _context.Product.Find(_productData.ProductId);
+
+            if (product == null) 
+            {
+                return NotFound();
+            }
 
             product.ProductName = _productData.ProductName;
             product.Description = _productData.Description;
-            product.Image = _productData.Image;
+            if(!string.IsNullOrEmpty(_productData.Image)) product.Image = _productData.Image;
             product.Price = _productData.Price;
             product.Discount = _productData.Discount;
 

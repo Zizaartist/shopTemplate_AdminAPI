@@ -25,10 +25,14 @@ namespace ShopAdminAPI.Models
 
         [JsonIgnore]
         public virtual Category ParentCategory { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Category> ChildCategories { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Product> Products { get; set; }
 
         [NotMapped]
-        public bool IsEndpoint { get => !ChildCategories.Any(); }
+        public bool HasChildCategories { get => ChildCategories.Any(); }
+        [NotMapped]
+        public bool HasProducts { get => Products.Any(); }
     }
 }
