@@ -185,15 +185,16 @@ namespace ShopAdminAPI.Controllers
         }
 
         // DELETE: api/Orders/RefuseOrder/2
-        [Route("RefureOrder/{id}")]
+        [Route("RefuseOrder/{id}")]
         [HttpDelete]
-        public ActionResult RefuseOrder(int id) 
+        public ActionResult RefuseOrder(int id)
         {
             var order = _context.Order.Include(order => order.OrderDetails)
+                                            .ThenInclude(detail => detail.Product)
                                         .Include(order => order.PointRegisters)
                                         .FirstOrDefault(order => order.OrderId == id);
 
-            if (order == null || order.OrderStatus != OrderStatus.sent) 
+            if (order == null || order.OrderStatus != OrderStatus.sent)
             {
                 return BadRequest("Заказ не существует или уже утвержден на исполнение");
             }
@@ -208,6 +209,24 @@ namespace ShopAdminAPI.Controllers
                 }
             }
 
+            //Возвращаем продукты на место
+            foreach (var detail in order.OrderDetails)
+            {
+                detail.Product.InStorage += detail.Count;
+            }
+
+            //"Отсоединяем" связанные сущности, чтобы контексту было наплевать на отсутсвие каскада
+            //В статье говорится что отсоединение затрагивает только указанные сущности, поэтому
+            //по идее продукты должны измениться
+            //https://docs.microsoft.com/ru-ru/dotnet/api/system.data.objects.objectcontext.detach?view=netframework-4.8#-----------
+            var detachedOrderDetails = _context.ChangeTracker.Entries<OrderDetail>().ToList();
+
+            foreach (var detail in detachedOrderDetails)
+            {
+                detail.State = EntityState.Detached;
+            }
+
+            //Удаляем без сомнений и позволяем триггеру делать свою работу
             _context.Order.Remove(order);
             _context.SaveChanges();
 
