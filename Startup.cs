@@ -56,6 +56,8 @@ namespace ShopAdminAPI
                             // установка потребителя токена
                             ValidAudience = ApiConfiguration.TOKEN_AUDIENCE,
 
+                            ValidateLifetime = false,
+
                             // установка ключа безопасности
                             IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
                             // валидация ключа безопасности
