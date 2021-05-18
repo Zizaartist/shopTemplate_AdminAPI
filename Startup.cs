@@ -24,8 +24,6 @@ namespace ShopAdminAPI
 
             ApiConfiguration.SHOP_ID = Configuration["ShopConfig:ShopId"];
             ApiConfiguration.SHOP_HUB_API = Configuration["ShopConfig:ShopHubAPI"];
-
-            //Task.Run(() => ConfigController.GetShopConfig()); //Временно не нужно
         }
 
         public IConfiguration Configuration { get; }

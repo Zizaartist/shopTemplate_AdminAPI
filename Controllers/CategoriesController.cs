@@ -130,6 +130,11 @@ namespace ShopAdminAPI.Controllers
                     RecursiveRemove(childCategory);
                 }
             }
+            else 
+            {
+                var products = _context.Product.Where(product => product.CategoryId == parentEntity.CategoryId);
+                _context.Product.RemoveRange(products);
+            }
 
             _context.Category.Remove(parentEntity);
         }
