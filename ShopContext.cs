@@ -29,6 +29,8 @@ namespace ShopAdminAPI
         public virtual DbSet<OrganizationInfo> OrganizationInfo { get; set; }
         public virtual DbSet<PointRegister> PointRegister { get; set; }
         public virtual DbSet<Product> Product { get; set; }
+        public virtual DbSet<ProductProperty> ProductProperties { get; set; }
+        public virtual DbSet<ProductPropertyValue> ProductPropertyValues { get; set; }
         public virtual DbSet<Report> Report { get; set; }
         public virtual DbSet<SessionRecord> SessionRecord { get; set; }
         public virtual DbSet<TokenRecord> TokenRecord { get; set; }
@@ -239,6 +241,32 @@ namespace ShopAdminAPI
                     .HasForeignKey(d => d.CategoryId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Products_CategoryId");
+
+                entity.HasMany(e => e.ProductProperties)
+                    .WithMany(e => e.Products)
+                    .UsingEntity<ProductPropertyValue>(
+                    e => e
+                        .HasOne(x => x.ProductProperty)
+                        .WithMany(x => x.ProductPropertyValues)
+                        .HasForeignKey(x => x.ProductPropertyId),
+                    e => e
+                        .HasOne(x => x.Product)
+                        .WithMany(x => x.ProductPropertyValues)
+                        .HasForeignKey(x => x.ProductId),
+                    e => {
+                        e.HasKey(x => new { x.ProductId, x.ProductPropertyId });
+                        e.ToTable("ProductPropertyValue");
+                    }
+                    );
+            });
+
+            modelBuilder.Entity<ProductProperty>(entity =>
+            {
+                entity.ToTable("ProductProperty");
+
+                entity.Property(e => e.PropertyName)
+                    .IsRequired()
+                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<Report>(entity =>
