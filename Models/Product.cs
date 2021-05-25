@@ -32,6 +32,8 @@ namespace ShopAdminAPI.Models
         public virtual Category Category { get; set; }
         [JsonIgnore]
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
+        public virtual ICollection<ProductProperty> ProductProperties { get; set; }
+        public virtual ICollection<ProductPropertyValue> ProductPropertyValues { get; set; }
         [JsonIgnore]
         public virtual ICollection<Report> Reports { get; set; }
     }
