@@ -15,6 +15,7 @@ namespace ShopAdminAPI.Controllers
     [Route("api/[controller]")]
     public class ConfigController : ControllerBase
     {
+        // PUT: api/Config/3
         [Route("{ver}")]
         [HttpPut]
         public async Task<ActionResult> UpdateConfiguration(int ver) 
@@ -28,6 +29,11 @@ namespace ShopAdminAPI.Controllers
 
             return Ok();
         }
+
+        // GET: api/Config/Awake
+        [Route("Awake")]
+        [HttpGet]
+        public ActionResult Awake() => Ok();
 
         public static async Task GetShopConfig()
         {
