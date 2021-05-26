@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ShopAdminAPI.Configurations;
 using ShopAdminAPI.Models;
 
 namespace ShopAdminAPI.Controllers.FrequentlyUsed
@@ -11,32 +12,10 @@ namespace ShopAdminAPI.Controllers.FrequentlyUsed
     public class PointsController
     {
         ShopContext _context;
-        /// <summary>
-        /// Коэффициент, который отражает проценты от суммы заказа, возвращаемые баллами
-        /// </summary>
-        const decimal pointsCoef = 0.05m;
-        /// <summary>
-        /// Максимальная сумма, которую можно оплатить баллами
-        /// </summary>
-        const int percentage = 30;
 
         public PointsController(ShopContext _context)
         {
             this._context = _context;
-        }
-
-        public decimal GetMaxPayment(decimal _userPoints, Order _order) 
-        {
-            var sumCost = _order.OrderDetails.Sum(e => e.Price * e.Count);
-            decimal costInPoints = sumCost / 100 * percentage;
-            if (_userPoints > costInPoints)
-            {
-                return costInPoints;
-            }
-            else 
-            {
-                return _userPoints;
-            }
         }
 
         /// <summary>
@@ -49,7 +28,7 @@ namespace ShopAdminAPI.Controllers.FrequentlyUsed
         /// <param name="_order">Заказ - источник значения максимальной денежной суммы</param>
         /// <param name="register">Полученый в результате регистр</param>
         /// <returns>Успешность операции</returns>
-        public bool StartTransaction(decimal _points, User _user, bool _usedOrReceived, Order _order, out PointRegister register) 
+        public bool StartTransaction(decimal _points, User _user, bool _usedOrReceived, Order _order, out PointRegister register)
         {
             register = null;
 
@@ -61,7 +40,7 @@ namespace ShopAdminAPI.Controllers.FrequentlyUsed
                 }
 
                 //Изымаем средства от отправителя
-                try 
+                try
                 {
                     _user.Points -= _points;
                 }
@@ -96,7 +75,7 @@ namespace ShopAdminAPI.Controllers.FrequentlyUsed
                 register = newPR;
                 _order.PointRegisters.Add(newPR);
             }
-            catch 
+            catch
             {
                 return false;
             }
@@ -160,32 +139,65 @@ namespace ShopAdminAPI.Controllers.FrequentlyUsed
             return true;
         }
 
-        public decimal CalculateSum(Order _order)
-        {
-            //Если детали не загружены - подгрузить
-            if (!_order.OrderDetails.Any()) _context.Entry(_order).Collection(order => order.OrderDetails).Load();
-            //Если деталей нет даже после загрузки - что-то не так
-            if (!_order.OrderDetails.Any() || _order.OrderDetails.Any(e => e.Price == default || e.Count == default)) throw new Exception("Ошибка при вычислении кэшбэка");
-            return _order.OrderDetails.Sum(e => e.Price * e.Count);
-        }
-
-        public decimal CalculateCashback(Order _order) 
+        public decimal CalculateCashback(Order _order)
         {
             var pointlessSum = CalculatePointless(_order);
-            return pointlessSum * pointsCoef;
+            return pointlessSum * ShopConfiguration.Cashback;
         }
 
-        public decimal CalculatePointless(Order _order) 
+        /// <summary>
+        /// Рассчитывает часть стоимости заказа, которая не уплачена баллами
+        /// </summary>
+        public decimal CalculatePointless(Order _order)
         {
-            var sum = CalculateSum(_order);
-            try
+            var sum = GetDetailsSum(_order.OrderDetails);
+            var points = _order.PointRegisters.Any() ? _order.PointRegister?.Points ?? 0 : 0;
+            return sum - points;
+        }
+
+        /// <summary>
+        /// Вычисляет сумму деталей заказа
+        /// </summary>
+        public decimal GetDetailsSum(IEnumerable<OrderDetail> _details)
+        {
+            return _details.Sum(detail =>
             {
-                var points = _order.PointRegisters.Any() ? _context.PointRegister.Find(_order.PointRegister.PointRegisterId).Points : 0;
-                return sum - points;
+                var discountCoef = (100 - (detail.Discount ?? default)) / 100m;
+                var newPrice = detail.Price * discountCoef;
+                return newPrice * detail.Count;
+            });
+        }
+
+        /// <summary>
+        /// Вычисляет максимальную часть стоимости заказа, которую можно оплатить баллами 
+        /// </summary>
+        /// <param name="_userPoints">Текущие баллы пользователя</param>
+        /// <param name="_order">Заказ, стоимость которого берется в расчет</param>
+        /// <returns>Часть стоимости, которая будет оплачена баллами</returns>
+
+        public decimal GetMaxPayment(decimal _userPoints, Order _order)
+        {
+            var detailsSum = GetDetailsSum(_order.OrderDetails);
+
+            return GetMaxPayment(_userPoints, detailsSum);
+        }
+
+        /// <summary>
+        /// Вычисляет максимальную часть стоимости заказа, которую можно оплатить баллами 
+        /// </summary>
+        /// <param name="_userPoints">Текущие баллы пользователя</param>
+        /// <param name="_initialSum">Суммарная стоимость заказа</param>
+        /// <returns>Часть стоимости, которая будет оплачена баллами</returns>
+        public decimal GetMaxPayment(decimal _userPoints, decimal _initialSum)
+        {
+            decimal costInPoints = _initialSum / 100 * ShopConfiguration.MaxPoints;
+            if (_userPoints > costInPoints)
+            {
+                return costInPoints;
             }
-            catch (Exception _ex) 
+            else
             {
-                throw _ex;
+                return _userPoints;
             }
         }
     }

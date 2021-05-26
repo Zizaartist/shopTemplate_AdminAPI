@@ -12,6 +12,7 @@ using ShopAdminAPI.Controllers;
 using ShopAdminAPI.Controllers.FrequentlyUsed;
 using ShopHubAPI.StaticValues;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace ShopAdminAPI
@@ -58,10 +59,12 @@ namespace ShopAdminAPI
                             IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
                         };
                     });
+
+            services.AddHttpClient();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime lifetime)
         {
             if (env.IsDevelopment())
             {
@@ -87,6 +90,13 @@ namespace ShopAdminAPI
                    name: "default",
                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            //Getting configuration
+            IHttpClientFactory _clientFactory = app.ApplicationServices.GetService(typeof(IHttpClientFactory)) as IHttpClientFactory;
+
+            var trash = new ConfigController(null, null);
+
+            lifetime.ApplicationStarted.Register(trash.GetShopConfig(_clientFactory).Wait);
         }
     }
 }
