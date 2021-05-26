@@ -77,7 +77,7 @@ namespace ShopAdminAPI.Controllers
                                             .Where(order => order.CreatedDate >= startingDay || datePeriod == DatePeriod.allTime)
                                             .DefaultIfEmpty() //Возвращает default если коллекция пуста
                                             .ToList()
-                                            .Sum(order => order != default ? pointsController.CalculateSum(order) + (order.DeliveryPrice ?? 0m) : 0m);
+                                            .Sum(order => order != default ? pointsController.CalculatePointless(order) + (order.DeliveryPrice ?? 0m) : 0m);
 
             var result = new 
             {
@@ -149,7 +149,7 @@ namespace ShopAdminAPI.Controllers
             var ordersFromDay = _context.Order.Where(order => order.CreatedDate.Date == _day).ToList();
 
             var pointsController = new PointsController(_context);
-            var totatSum = ordersFromDay?.Sum(order => pointsController.CalculateSum(order) + (order.DeliveryPrice ?? 0m)) ?? 0m;
+            var totatSum = ordersFromDay?.Sum(order => pointsController.CalculatePointless(order) + (order.DeliveryPrice ?? 0m)) ?? 0m;
 
             Report result = new Report()
             {
@@ -173,8 +173,10 @@ namespace ShopAdminAPI.Controllers
 
                 result.ProductOfDayId = productOfDay.ProductId;
                 result.ProductOfDayCount = productOfDay.Count;
+
+                var productDetail = productsByGroup.First(e => e.Key == productOfDay.ProductId).First();
                 //Находим группу по id и из первого элемента вытаскиваем цену
-                result.ProductOfDaySum = productOfDay.Count * productsByGroup.First(e => e.Key == productOfDay.ProductId).First().Price; //пока без проверок безопасности
+                result.ProductOfDaySum = productOfDay.Count * (productDetail.Price * ((100 - productDetail.Discount ?? 0) / 100m)); //пока без проверок безопасности
             }
 
             _context.Report.Add(result);

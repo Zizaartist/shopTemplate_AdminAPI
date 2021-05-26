@@ -15,6 +15,7 @@ namespace ShopAdminAPI.Models
         public int Count { get; set; }
         public int? ProductId { get; set; }
         public decimal Price { get; set; }
+        public int? Discount { get; set; }
         [JsonIgnore]
         public int OrderId { get; set; }
 

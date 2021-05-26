@@ -26,6 +26,7 @@ namespace ShopAdminAPI.Models
         public ChangeBanknote? ChangeBanknote { get; set; }
         public bool PointsUsed { get; set; }
         public decimal? DeliveryPrice { get; set; }
+        public decimal Sum { get; set; }
         public DateTime CreatedDate { get; set; }
 
         [JsonIgnore]
@@ -45,8 +46,6 @@ namespace ShopAdminAPI.Models
                 return PointRegisters?.FirstOrDefault(pr => pr.UsedOrReceived);
             }
         }
-        [NotMapped]
-        public decimal Sum { get; set; }
         [NotMapped]
         public string OrdererName { get; set; }
     }

@@ -36,9 +36,7 @@ namespace ShopAdminAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Order>> GetNewOrders()
         {
-            IQueryable<Order> orders = _context.Order.Include(order => order.OrderDetails)
-                                        .Include(order => order.PointRegisters)
-                                        .Include(order => order.OrderInfo)
+            IQueryable<Order> orders = _context.Order.Include(order => order.OrderInfo)
                                         .Where(order => order.OrderStatus == OrderStatus.sent)
                                         .OrderByDescending(order => order.CreatedDate);
 
@@ -48,14 +46,6 @@ namespace ShopAdminAPI.Controllers
             }
 
             var result = orders.ToList();
-
-            foreach (var order in result)
-            {
-                order.Sum = order.OrderDetails.Sum(detail => detail.Count * detail.Price) +
-                            (order.DeliveryPrice ?? 0) -
-                            (order.PointRegister?.Points ?? 0);
-                order.OrderDetails = null;
-            }
 
             return result;
         }
@@ -68,9 +58,7 @@ namespace ShopAdminAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Order>> GetUnfinishedOrders() 
         {
-            IQueryable<Order> orders = _context.Order.Include(order => order.OrderDetails)
-                                        .Include(order => order.PointRegisters)
-                                        .Include(order => order.OrderInfo)
+            IQueryable<Order> orders = _context.Order.Include(order => order.OrderInfo)
                                         .Where(order => order.OrderStatus != OrderStatus.delivered && //Последний статус
                                                         order.OrderStatus != OrderStatus.sent) //Первый статус
                                         .OrderByDescending(order => order.CreatedDate);
@@ -81,14 +69,6 @@ namespace ShopAdminAPI.Controllers
             }
 
             var result = orders.ToList();
-
-            foreach (var order in result)
-            {
-                order.Sum = order.OrderDetails.Sum(detail => detail.Count * detail.Price) +
-                            (order.DeliveryPrice ?? 0) -
-                            (order.PointRegister?.Points ?? 0);
-                order.OrderDetails = null;
-            }
 
             return result;
         }
@@ -101,9 +81,7 @@ namespace ShopAdminAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Order>> GetHistory(int _page)
         {
-            IQueryable<Order> orders = _context.Order.Include(order => order.OrderDetails)
-                                        .Include(order => order.PointRegisters)
-                                        .Include(order => order.OrderInfo)
+            IQueryable<Order> orders = _context.Order.Include(order => order.OrderInfo)
                                         .Where(order => order.OrderStatus >= OrderStatus.delivered)
                                         .OrderByDescending(order => order.CreatedDate);
 
@@ -115,14 +93,6 @@ namespace ShopAdminAPI.Controllers
             }
 
             var result = orders.ToList();
-
-            foreach (var order in result)
-            {
-                order.Sum = order.OrderDetails.Sum(detail => detail.Count * detail.Price) +
-                            (order.DeliveryPrice ?? 0) -
-                            (order.PointRegister?.Points ?? 0);
-                order.OrderDetails = null;
-            }
 
             return result;
         }
