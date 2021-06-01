@@ -257,7 +257,7 @@ namespace ShopAdminAPI
                         e.HasKey(x => new { x.ProductId, x.ProductPropertyId });
                         e.ToTable("ProductPropertyValue");
                     }
-                    );
+				);
             });
 
             modelBuilder.Entity<ProductProperty>(entity =>
