@@ -60,6 +60,7 @@ namespace ShopAdminAPI.Controllers
                     PaymentMethods = "",
                     Cashback = 0,
                     MinimalDeliveryPrice = (decimal?)0m,
+                    Theme = 0,
                     Version = 0
                 };
 
